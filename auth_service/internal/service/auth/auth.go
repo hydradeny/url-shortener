@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
 	"golang.org/x/exp/slog"
@@ -36,5 +37,24 @@ func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) (*LogoutOutpu
 }
 
 func (s *AuthService) Register(ctx context.Context, in *RegisterInput) (*RegisterOutput, error) {
-	return nil, nil
+	err := in.Validate()
+	if err != nil {
+		s.log.Error("validation", slog.String("error", err.Error()), "input:", *in)
+		return nil, err
+	}
+
+	CreateUser := user.CreateUser{
+		Email:    in.Email,
+		Password: in.Password,
+	}
+	u, err := s.um.Create(ctx, &CreateUser)
+	if err != nil {
+		s.log.Error("user creation", slog.String("error", err.Error()), "input:", *in)
+		if errors.Is(err, user.UserAlreadyExistErr) {
+			return nil, user.UserAlreadyExistErr
+		}
+		return nil, user.UnknownUserCreationErr
+	}
+
+	return &RegisterOutput{UserID: u.ID}, nil
 }

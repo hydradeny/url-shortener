@@ -2,8 +2,6 @@ package auth
 
 import (
 	"errors"
-
-	"github.com/hydradeny/url-shortener/auth_service/internal/service/session"
 )
 
 const (
@@ -22,7 +20,7 @@ func (d *LoginInput) Validate() error {
 }
 
 type LogoutInput struct {
-	session session.Session
+	SessionID string
 }
 
 type RegisterInput struct {

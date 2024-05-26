@@ -52,8 +52,18 @@ func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, 
 	return &LoginOutput{SessionID: sess.ID}, nil
 }
 
-func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) (*LogoutOutput, error) {
-	return nil, nil
+func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) error {
+	DestroySession := &session.DestroySession{SessionID: in.SessionID}
+	err := s.sm.Destroy(ctx, DestroySession)
+	if err != nil {
+		s.log.Error("destroy", slog.String("error", err.Error()))
+		if errors.Is(err, session.ErrSessionNotFound) {
+			return err
+		}
+		return UnknownErr
+	}
+
+	return nil
 }
 
 func (s *AuthService) Register(ctx context.Context, in *RegisterInput) (*RegisterOutput, error) {

@@ -20,6 +20,7 @@ type SessionManager interface {
 type UserManager interface {
 	Create(ctx context.Context, in *user.CreateUser) (*user.User, error)
 	GetByEmail(ctx context.Context, email string) (*user.User, error)
+	CheckPasswordByEmail(ctx context.Context, email string) (*user.User, error)
 }
 
 type AuthService struct {
@@ -29,7 +30,26 @@ type AuthService struct {
 }
 
 func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, error) {
-	return nil, nil
+	err := in.Validate()
+	if err != nil {
+		s.log.Error("validation", slog.String("error", err.Error()), "input:", *in)
+		return nil, err
+	}
+	u, err := s.um.CheckPasswordByEmail(ctx, in.Email)
+	if err != nil {
+		s.log.Error("check password", slog.String("error", err.Error()))
+		if errors.Is(err, user.UserNotFoundErr) || errors.Is(err, user.BadPasswordErr) {
+			return nil, err
+		}
+		return nil, UnknownErr
+	}
+	CreateSession := &session.CreateSession{UserID: u.ID}
+	sess, err := s.sm.Create(ctx, CreateSession)
+	if err != nil {
+		return nil, session.CreateSessionErr
+	}
+
+	return &LoginOutput{SessionID: sess.ID}, nil
 }
 
 func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) (*LogoutOutput, error) {

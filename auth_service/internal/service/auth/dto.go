@@ -16,6 +16,11 @@ type LoginInput struct {
 	Password string
 }
 
+func (d *LoginInput) Validate() error {
+	// TODO: add validation
+	return nil
+}
+
 type LogoutInput struct {
 	session session.Session
 }
@@ -42,5 +47,5 @@ type RegisterOutput struct {
 type LogoutOutput struct{}
 
 type LoginOutput struct {
-	session session.Session
+	SessionID string
 }

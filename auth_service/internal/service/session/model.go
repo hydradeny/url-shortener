@@ -1,8 +1,8 @@
 package session
 
 type Session struct {
-	SessionID string
-	UserID    uint32
+	ID     string
+	UserID uint32
 }
 
 type CreateSession struct {

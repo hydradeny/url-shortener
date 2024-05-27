@@ -2,4 +2,7 @@ package auth
 
 import "errors"
 
-var UnknownErr = errors.New("unknown error")
+var (
+	ErrWrongPassLength = errors.New("wrong password length")
+	UnknownErr         = errors.New("unknown error")
+)

@@ -1,9 +1,5 @@
 package auth
 
-import (
-	"errors"
-)
-
 const (
 	minPassLength = 8
 	maxPassLength = 32
@@ -30,7 +26,7 @@ type RegisterInput struct {
 
 func (d *RegisterInput) Validate() error {
 	if len(d.Password) < minPassLength || len(d.Password) > maxPassLength {
-		return errors.New("wrong password length")
+		return ErrWrongPassLength
 	}
 
 	// TODO:Email valdation

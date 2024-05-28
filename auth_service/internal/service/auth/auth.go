@@ -38,7 +38,7 @@ func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, 
 	u, err := s.um.CheckPasswordByEmail(ctx, in.Email)
 	if err != nil {
 		s.log.Error("check password", slog.String("error", err.Error()))
-		if errors.Is(err, user.UserNotFoundErr) || errors.Is(err, user.BadPasswordErr) {
+		if errors.Is(err, user.UserNotFoundErr) || errors.Is(err, user.ErrBadPassword) {
 			return nil, err
 		}
 		return nil, UnknownErr

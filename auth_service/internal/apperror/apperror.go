@@ -8,6 +8,8 @@ import (
 var (
 	ErrNotFound   = errors.New("not found")
 	ErrBadRequest = errors.New("bad request")
+	ErrUserExist  = errors.New("user already exists")
+	ErrInternal   = errors.New("internal server error")
 )
 
 type AppError struct {

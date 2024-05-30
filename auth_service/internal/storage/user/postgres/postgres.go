@@ -7,16 +7,26 @@ import (
 	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/exp/slog"
 )
 
+// Pool interface for mock purposes
+type PgxPoolIface interface {
+	Begin(context.Context) (pgx.Tx, error)
+	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+	Ping(context.Context) error
+	Close()
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
 type PgxUserRepo struct {
-	dbpool *pgxpool.Pool
+	dbpool PgxPoolIface
 	log    *slog.Logger
 }
 
-func NewPgxUserRepo(ctx context.Context, pgxPool *pgxpool.Pool, log *slog.Logger) *PgxUserRepo {
+func NewPgxUserRepo(ctx context.Context, pgxPool PgxPoolIface, log *slog.Logger) *PgxUserRepo {
 	return &PgxUserRepo{
 		dbpool: pgxPool,
 		log:    log,

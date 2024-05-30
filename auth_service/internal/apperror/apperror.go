@@ -6,10 +6,17 @@ import (
 )
 
 var (
-	ErrNotFound   = errors.New("not found")
-	ErrBadRequest = errors.New("bad request")
-	ErrUserExist  = errors.New("user already exists")
-	ErrInternal   = errors.New("internal server error")
+	ErrNotFound         = errors.New("not found")
+	ErrBadRequest       = errors.New("bad request")
+	ErrUserExist        = errors.New("user already exists")
+	ErrInternal         = errors.New("internal server error")
+	ErrUserNotFound     = errors.New("user not found")
+	ErrBadPassword      = errors.New("bad password")
+	ErrUnknown          = errors.New("unknown error")
+	ErrBadLogin         = errors.New("bad email or password")
+	ErrPasswordNotValid = errors.New("validation password error")
+	ErrSessionNotFound  = errors.New("session not found")
+	ErrEmailNotValid    = errors.New("validation email error")
 )
 
 type AppError struct {

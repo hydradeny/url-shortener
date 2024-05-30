@@ -9,10 +9,10 @@ import (
 )
 
 type SessionRepo interface {
-	Create(context.Context, *CreateSessionStorage) (*Session, error)
+	Create(context.Context, *CreateSessionStorage) error
 	GetByID(ctx context.Context, id string) (*Session, error)
 	Delete(ctx context.Context, id string) error
-	DeleteByUserID(ctx context.Context, userID uint32) error
+	DeleteByUserID(ctx context.Context, userID uint32) (deleted int, err error)
 }
 
 type SessionManager struct {
@@ -29,11 +29,15 @@ func (sm *SessionManager) Create(ctx context.Context, in *CreateSession) (*Sessi
 		ID:     uuid.String(),
 		UserID: in.UserID,
 	}
-	sess, err := sm.storage.Create(ctx, createSession)
+	err = sm.storage.Create(ctx, createSession)
 	if err != nil {
 		return nil, err
 	}
-	return sess, err
+	res := &Session{
+		ID:     createSession.ID,
+		UserID: createSession.UserID,
+	}
+	return res, err
 }
 
 func (sm *SessionManager) Check(ctx context.Context, in *CheckSession) (*Session, error) {
@@ -52,10 +56,10 @@ func (sm *SessionManager) Destroy(ctx context.Context, in *DestroySession) error
 	return nil
 }
 
-func (sm *SessionManager) DestroyAll(ctx context.Context, in *DestroyAllSession) error {
-	err := sm.storage.DeleteByUserID(ctx, in.UserID)
+func (sm *SessionManager) DestroyAll(ctx context.Context, in *DestroyAllSession) (int, error) {
+	deleted, err := sm.storage.DeleteByUserID(ctx, in.UserID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return deleted, nil
 }

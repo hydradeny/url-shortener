@@ -1,9 +1,10 @@
 module github.com/hydradeny/url-shortener/auth_service
 
-go 1.20
+go 1.22
 
 require (
 	github.com/jackc/pgx/v5 v5.6.0
+	github.com/pashagolub/pgxmock/v3 v3.4.0
 	golang.org/x/crypto v0.23.0
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
 )

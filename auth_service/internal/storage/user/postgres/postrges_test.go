@@ -15,9 +15,8 @@ import (
 
 func TestCreateGood(t *testing.T) {
 	testCases := []struct {
-		expectingMockErr error
-		in               user.CreateUser
-		out              user.RawUser
+		in  user.CreateUser
+		out user.RawUser
 	}{
 		{
 			in: user.CreateUser{
@@ -41,7 +40,7 @@ func TestCreateGood(t *testing.T) {
 	for _, tc := range testCases {
 		mock.ExpectQuery("INSERT INTO users").
 			WithArgs(tc.in.Email, tc.in.Password).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(tc.out.ID)).RowsWillBeClosed()
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(tc.out.ID))
 
 		res, err := store.Create(context.Background(), &tc.in)
 		if err != nil {
@@ -74,8 +73,8 @@ func TestCreateBad(t *testing.T) {
 		},
 		{
 			name:            "other db error",
-			expectedMockErr: errors.New("some error"),
-			expectedFuncErr: apperror.NewAppError(apperror.ErrInternal, "", errors.New("some error")),
+			expectedMockErr: errors.New("some other error"),
+			expectedFuncErr: apperror.NewAppError(apperror.ErrInternal, "", errors.New("some other error")),
 			in: &user.CreateUser{
 				Email:    "email",
 				Password: "password",
@@ -95,6 +94,87 @@ func TestCreateBad(t *testing.T) {
 		// WillReturnRows(pgxmock.NewRows([]string{"id"}))
 
 		_, err := store.Create(context.Background(), tc.in)
+		if !errors.Is(err, tc.expectedFuncErr) {
+			t.Errorf("expected %v, got: %v", tc.expectedFuncErr, err)
+		}
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}
+
+func TestGetByEmailGood(t *testing.T) {
+	testCases := []struct {
+		in  string
+		out user.RawUser
+	}{
+		{
+			in: "email",
+			out: user.RawUser{
+				Email:    "email",
+				PassHash: []byte("password"),
+				ID:       1,
+			},
+		},
+	}
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+	store := NewPgxUserRepo(context.Background(), mock, &slog.Logger{})
+
+	for _, tc := range testCases {
+		mock.ExpectQuery("SELECT id, password FROM users").
+			WithArgs(tc.in).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "password"}).AddRow(tc.out.ID, tc.out.PassHash))
+
+		res, err := store.GetByEmail(context.Background(), tc.in)
+		if err != nil {
+			t.Errorf("expected nil error, got: %s", err)
+		}
+		if !reflect.DeepEqual(tc.out, *res) {
+			t.Errorf("got: %v\n expected: %v", *res, tc.out)
+		}
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}
+
+func TestGetByEmailBad(t *testing.T) {
+	testCases := []struct {
+		name            string
+		expectedMockErr error
+		expectedFuncErr error
+		in              string
+	}{
+		{
+			name:            "user exists",
+			expectedMockErr: pgx.ErrNoRows,
+			expectedFuncErr: apperror.NewAppError(apperror.ErrNotFound, "", nil),
+			in:              "email",
+		},
+		{
+			name:            "other db error",
+			expectedMockErr: errors.New("some other error"),
+			expectedFuncErr: apperror.NewAppError(apperror.ErrInternal, "", errors.New("some other error")),
+			in:              "email",
+		},
+	}
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+	store := NewPgxUserRepo(context.Background(), mock, &slog.Logger{})
+	for _, tc := range testCases {
+		mock.ExpectQuery("SELECT id, password FROM users").
+			WithArgs(tc.in).WillReturnError(tc.expectedMockErr)
+		// WillReturnRows(pgxmock.NewRows([]string{"id"}))
+
+		_, err := store.GetByEmail(context.Background(), tc.in)
 		if !errors.Is(err, tc.expectedFuncErr) {
 			t.Errorf("expected %v, got: %v", tc.expectedFuncErr, err)
 		}

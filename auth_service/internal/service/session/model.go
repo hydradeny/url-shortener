@@ -8,6 +8,10 @@ type Session struct {
 type CreateSession struct {
 	UserID uint32
 }
+type CreateSessionStorage struct {
+	ID     string
+	UserID uint32
+}
 
 type DestroySession struct {
 	SessionID string

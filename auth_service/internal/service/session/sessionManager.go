@@ -3,11 +3,13 @@ package session
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
+	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
 	"golang.org/x/exp/slog"
 )
 
 type SessionRepo interface {
-	Create(context.Context, *CreateSession) (*Session, error)
+	Create(context.Context, *CreateSessionStorage) (*Session, error)
 	GetByID(ctx context.Context, id string) (*Session, error)
 	Delete(ctx context.Context, id string) error
 	DeleteByUserID(ctx context.Context, userID uint32) error
@@ -19,7 +21,15 @@ type SessionManager struct {
 }
 
 func (sm *SessionManager) Create(ctx context.Context, in *CreateSession) (*Session, error) {
-	sess, err := sm.storage.Create(ctx, in)
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		return nil, apperror.NewAppError(apperror.ErrInternal, "generation UUID error", err)
+	}
+	createSession := &CreateSessionStorage{
+		ID:     uuid.String(),
+		UserID: in.UserID,
+	}
+	sess, err := sm.storage.Create(ctx, createSession)
 	if err != nil {
 		return nil, err
 	}

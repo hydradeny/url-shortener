@@ -23,7 +23,7 @@ func (e *AppError) Unwrap() error {
 }
 
 func (e *AppError) Error() string {
-	return e.ErrType.Error() + ":" + e.Message + ":" + e.WrappedErr.Error()
+	return e.ErrType.Error() + ":" + e.Message
 }
 
 func (e *AppError) Is(err error) bool {

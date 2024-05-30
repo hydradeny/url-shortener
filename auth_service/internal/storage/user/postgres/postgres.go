@@ -34,7 +34,7 @@ func NewPgxUserRepo(ctx context.Context, pgxPool PgxPoolIface, log *slog.Logger)
 }
 
 func (repo *PgxUserRepo) Create(ctx context.Context, in *user.CreateUser) (*user.RawUser, error) {
-	row := repo.dbpool.QueryRow(ctx, "INSERT INTO users(email, password) values ($1,$2) RETURNING id", &in.Email, in.Password)
+	row := repo.dbpool.QueryRow(ctx, "INSERT INTO users(email, password) values ($1,$2) RETURNING id", in.Email, in.Password)
 	out := &user.RawUser{
 		PassHash: []byte(in.Password),
 		Email:    in.Email,

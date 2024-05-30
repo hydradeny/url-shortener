@@ -17,6 +17,7 @@ var (
 	ErrPasswordNotValid = errors.New("validation password error")
 	ErrSessionNotFound  = errors.New("session not found")
 	ErrEmailNotValid    = errors.New("validation email error")
+	ErrNoAuth           = errors.New("no session found")
 )
 
 type AppError struct {

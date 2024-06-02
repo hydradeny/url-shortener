@@ -2,10 +2,10 @@ package session
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/gofrs/uuid"
 	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
-	"golang.org/x/exp/slog"
 )
 
 type SessionRepo interface {
@@ -18,6 +18,13 @@ type SessionRepo interface {
 type SessionManager struct {
 	log     *slog.Logger
 	storage SessionRepo
+}
+
+func New(log *slog.Logger, repo SessionRepo) *SessionManager {
+	return &SessionManager{
+		log:     log,
+		storage: repo,
+	}
 }
 
 func (sm *SessionManager) Create(ctx context.Context, in *CreateSession) (*Session, error) {

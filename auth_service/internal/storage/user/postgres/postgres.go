@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"golang.org/x/exp/slog"
 )
 
 // Pool interface for mock purposes

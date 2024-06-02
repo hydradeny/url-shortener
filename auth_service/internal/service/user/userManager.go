@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"log/slog"
 
 	"golang.org/x/crypto/argon2"
-	"golang.org/x/exp/slog"
 )
 
 const saltLength = 8
@@ -17,8 +17,15 @@ type UserStorage interface {
 }
 
 type UserManager struct {
-	log     slog.Logger
+	log     *slog.Logger
 	storage UserStorage
+}
+
+func NewService(log *slog.Logger, repo UserStorage) *UserManager {
+	return &UserManager{
+		log:     log,
+		storage: repo,
+	}
 }
 
 func (um *UserManager) Create(ctx context.Context, in *CreateUser) (*User, error) {

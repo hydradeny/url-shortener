@@ -3,9 +3,9 @@ package auth
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
-	"golang.org/x/exp/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/session"
 )
@@ -14,19 +14,27 @@ type SessionManager interface {
 	Create(context.Context, *session.CreateSession) (*session.Session, error)
 	Check(context.Context, *session.CheckSession) (*session.Session, error)
 	Destroy(context.Context, *session.DestroySession) error
-	DestroyAll(context.Context, *session.DestroyAllSession) error
+	DestroyAll(context.Context, *session.DestroyAllSession) (int, error)
 }
 
 type UserManager interface {
 	Create(ctx context.Context, in *user.CreateUser) (*user.User, error)
 	GetByEmail(ctx context.Context, email string) (*user.User, error)
-	CheckPasswordByEmail(ctx context.Context, email string) (*user.User, error)
+	CheckPasswordByEmail(ctx context.Context, in *user.CheckPassword) (*user.User, error)
 }
 
 type AuthService struct {
 	log *slog.Logger
 	sm  SessionManager
 	um  UserManager
+}
+
+func NewService(log *slog.Logger, sm SessionManager, um UserManager) *AuthService {
+	return &AuthService{
+		log: log,
+		sm:  sm,
+		um:  um,
+	}
 }
 
 func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, error) {

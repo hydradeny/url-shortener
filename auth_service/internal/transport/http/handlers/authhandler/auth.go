@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/auth"
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/session"
 	"github.com/hydradeny/url-shortener/auth_service/pkg/restapi"
-	"golang.org/x/exp/slog"
 )
 
 const CookieName = "session_id"
@@ -28,6 +28,13 @@ type AuthService interface {
 type AuthHandler struct {
 	log     *slog.Logger
 	service AuthService
+}
+
+func New(log *slog.Logger, service AuthService) *AuthHandler {
+	return &AuthHandler{
+		log:     log,
+		service: service,
+	}
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,8 @@ module github.com/hydradeny/url-shortener/auth_service
 go 1.22
 
 require (
+	github.com/go-chi/chi v1.5.5
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/pashagolub/pgxmock/v3 v3.4.0

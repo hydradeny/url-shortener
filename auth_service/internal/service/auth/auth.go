@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
@@ -43,18 +42,19 @@ func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, 
 		s.log.Error("validation", slog.String("error", err.Error()), "input:", *in)
 		return nil, err
 	}
-	u, err := s.um.CheckPasswordByEmail(ctx, in.Email)
+	checkIn := user.CheckPassword{
+		Email:    in.Email,
+		Password: in.Password,
+	}
+	u, err := s.um.CheckPasswordByEmail(ctx, &checkIn)
 	if err != nil {
 		s.log.Error("check password", slog.String("error", err.Error()))
-		if errors.Is(err, user.UserNotFoundErr) || errors.Is(err, user.ErrBadPassword) {
-			return nil, err
-		}
-		return nil, UnknownErr
+		return nil, err
 	}
 	CreateSession := &session.CreateSession{UserID: u.ID}
 	sess, err := s.sm.Create(ctx, CreateSession)
 	if err != nil {
-		return nil, session.CreateSessionErr
+		return nil, err
 	}
 
 	return &LoginOutput{SessionID: sess.ID}, nil
@@ -65,10 +65,7 @@ func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) error {
 	err := s.sm.Destroy(ctx, DestroySession)
 	if err != nil {
 		s.log.Error("destroy", slog.String("error", err.Error()))
-		if errors.Is(err, session.ErrSessionNotFound) {
-			return err
-		}
-		return UnknownErr
+		return err
 	}
 
 	return nil
@@ -88,10 +85,7 @@ func (s *AuthService) Register(ctx context.Context, in *RegisterInput) (*Registe
 	u, err := s.um.Create(ctx, &CreateUser)
 	if err != nil {
 		s.log.Error("user creation", slog.String("error", err.Error()), "input:", *in)
-		if errors.Is(err, user.UserAlreadyExistErr) {
-			return nil, user.UserAlreadyExistErr
-		}
-		return nil, user.UnknownUserCreationErr
+		return nil, err
 	}
 
 	return &RegisterOutput{UserID: u.ID}, nil

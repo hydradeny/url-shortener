@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"log/slog"
 
+	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -62,7 +63,7 @@ func (um *UserManager) CheckPasswordByEmail(ctx context.Context, in *CheckPasswo
 
 	salt := rawUser.PassHash[0:saltLength]
 	if !bytes.Equal(um.hashPass(in.Password, salt), rawUser.PassHash) {
-		return nil, ErrBadPassword
+		return nil, apperror.NewAppError(apperror.ErrBadPassword, "service CheckPassword error", nil)
 	}
 
 	user := &User{

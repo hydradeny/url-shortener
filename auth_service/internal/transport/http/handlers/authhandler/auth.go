@@ -41,10 +41,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	if email == "" {
+		h.log.Warn("HTTP login", slog.String("error", "empty email"))
 		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty email"))
 		return
 	}
 	if password == "" {
+		h.log.Warn("HTTP login", slog.String("error", "empty passsword"))
 		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty password"))
 		return
 	}
@@ -60,15 +62,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			case apperror.ErrNotFound:
 				fallthrough
 			case apperror.ErrBadPassword:
+				h.log.Warn("HTTP login", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusUnauthorized, apperror.ErrBadLogin)
 			case apperror.ErrInternal:
+				h.log.Error("HTTP login", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrInternal)
 			default:
+				h.log.Error("HTTP login", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrUnknown)
 			}
 			return
 		}
 
+		h.log.Error("HTTP login", slog.String("error", err.Error()))
 		restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrUnknown)
 		return
 	}
@@ -88,10 +94,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	if email == "" {
+		h.log.Warn("HTTP register", slog.String("error", "empty email"))
 		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty email"))
 		return
 	}
 	if password == "" {
+		h.log.Warn("HTTP register", slog.String("error", "empty password"))
 		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty password"))
 		return
 	}
@@ -105,18 +113,24 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &appError) {
 			switch appError.ErrType {
 			case apperror.ErrUserExist:
+				h.log.Warn("HTTP register", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusConflict, apperror.ErrUserExist)
 			case apperror.ErrPasswordNotValid:
+				h.log.Warn("HTTP register", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusBadRequest, apperror.ErrPasswordNotValid)
 			case apperror.ErrEmailNotValid:
+				h.log.Warn("HTTP register", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusBadRequest, apperror.ErrEmailNotValid)
 			case apperror.ErrInternal:
+				h.log.Error("HTTP register", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrInternal)
 			default:
+				h.log.Error("HTTP register", slog.String("error", appError.Error()))
 				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrUnknown)
 			}
 			return
 		}
+		h.log.Error("HTTP register", slog.String("error", err.Error()))
 		restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrUnknown)
 		return
 	}
@@ -142,12 +156,15 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &appError) {
 			switch appError.ErrType {
 			case apperror.ErrSessionNotFound:
+				h.log.Warn("HTTP logout", slog.String("error", appError.Error()))
 				w.WriteHeader(http.StatusUnauthorized)
 			default:
+				h.log.Error("HTTP logout", slog.String("error", appError.Error()))
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 			return
 		}
+		h.log.Error("HTTP logout", slog.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

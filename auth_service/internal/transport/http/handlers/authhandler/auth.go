@@ -41,13 +41,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	if email == "" {
-		h.log.Warn("HTTP login", slog.String("error", "empty email"))
-		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty email"))
+		h.log.Warn("HTTP login", slog.String("error", "email is required"))
+		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("email is required"))
 		return
 	}
 	if password == "" {
-		h.log.Warn("HTTP login", slog.String("error", "empty passsword"))
-		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty password"))
+		h.log.Warn("HTTP login", slog.String("error", "password is required"))
+		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("password is required"))
 		return
 	}
 	loginInput := &auth.LoginInput{
@@ -94,13 +94,13 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	if email == "" {
-		h.log.Warn("HTTP register", slog.String("error", "empty email"))
-		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty email"))
+		h.log.Warn("HTTP register", slog.String("error", "email is required"))
+		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("email is required"))
 		return
 	}
 	if password == "" {
-		h.log.Warn("HTTP register", slog.String("error", "empty password"))
-		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("empty password"))
+		h.log.Warn("HTTP register", slog.String("error", "password is required"))
+		restapi.RespJSONError(w, http.StatusBadRequest, fmt.Errorf("password is required"))
 		return
 	}
 	registerIn := &auth.RegisterInput{

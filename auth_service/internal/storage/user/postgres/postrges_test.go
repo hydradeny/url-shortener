@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"reflect"
 	"testing"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v3"
-	"golang.org/x/exp/slog"
 )
 
 func TestCreateGood(t *testing.T) {

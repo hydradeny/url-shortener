@@ -142,7 +142,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// TODO: check session
 
-	session, err := SessionFromContext(r.Context())
+	session, err := sessionFromContext(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -171,7 +171,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func SessionFromContext(ctx context.Context) (*session.Session, error) {
+func sessionFromContext(ctx context.Context) (*session.Session, error) {
 	sess, ok := ctx.Value(CtxSessionKey).(*session.Session)
 	if !ok {
 		return nil, apperror.ErrNoAuth

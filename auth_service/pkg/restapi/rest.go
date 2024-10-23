@@ -7,7 +7,7 @@ import (
 
 type ApiResponse struct {
 	Body  interface{} `json:"body,omitempty"`
-	Error string      `json:"error,omitempty"`
+	Error interface{} `json:"error,omitempty"`
 }
 
 func RespJSON(w http.ResponseWriter, body interface{}) {
@@ -22,7 +22,7 @@ func RespJSONError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	w.Header().Add("Content-Type", "application/json")
 	respJSON, _ := json.Marshal(&ApiResponse{
-		Error: err.Error(),
+		Error: err,
 	})
 	w.Write(respJSON)
 }

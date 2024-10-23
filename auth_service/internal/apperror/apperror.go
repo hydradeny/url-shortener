@@ -21,9 +21,9 @@ var (
 )
 
 type AppError struct {
-	WrappedErr error
-	ErrType    error
-	Message    string
+	WrappedErr error `json:"-"`
+	UserError  error
+	Message    string `json:",omitempty"`
 }
 
 func (e *AppError) Unwrap() error {
@@ -31,11 +31,11 @@ func (e *AppError) Unwrap() error {
 }
 
 func (e *AppError) Error() string {
-	return e.ErrType.Error() + ":" + e.Message
+	return e.WrappedErr.Error() //+ ":" + e.Message
 }
 
 func (e *AppError) Is(err error) bool {
-	return errors.Is(err, e.ErrType)
+	return errors.Is(err, e.UserError)
 }
 
 func (e *AppError) Marshal() []byte {
@@ -48,7 +48,7 @@ func (e *AppError) Marshal() []byte {
 
 func NewAppError(errorType error, messqge string, err error) *AppError {
 	return &AppError{
-		ErrType:    errorType,
+		UserError:  errorType,
 		Message:    messqge,
 		WrappedErr: err,
 	}

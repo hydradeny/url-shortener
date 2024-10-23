@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/service/user"
@@ -37,9 +38,10 @@ func NewService(log *slog.Logger, sm SessionManager, um UserManager) *AuthServic
 }
 
 func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, error) {
+	const op = "AuthService.Login"
 	err := in.Validate()
 	if err != nil {
-		s.log.Error("validation", slog.String("error", err.Error()), "input:", *in)
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 	checkIn := user.CheckPassword{
@@ -48,12 +50,13 @@ func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, 
 	}
 	u, err := s.um.CheckPasswordByEmail(ctx, &checkIn)
 	if err != nil {
-		s.log.Error("check password", slog.String("error", err.Error()))
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 	CreateSession := &session.CreateSession{UserID: u.ID}
 	sess, err := s.sm.Create(ctx, CreateSession)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 
@@ -61,10 +64,11 @@ func (s *AuthService) Login(ctx context.Context, in *LoginInput) (*LoginOutput, 
 }
 
 func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) error {
+	const op = "AuthService.Logout"
 	DestroySession := &session.DestroySession{SessionID: in.SessionID}
 	err := s.sm.Destroy(ctx, DestroySession)
 	if err != nil {
-		s.log.Error("destroy", slog.String("error", err.Error()))
+		err = fmt.Errorf("%s: %w", op, err)
 		return err
 	}
 
@@ -72,9 +76,10 @@ func (s *AuthService) Logout(ctx context.Context, in *LogoutInput) error {
 }
 
 func (s *AuthService) Register(ctx context.Context, in *RegisterInput) (*RegisterOutput, error) {
+	const op = "AuthService.Register"
 	err := in.Validate()
 	if err != nil {
-		s.log.Error("validation", slog.String("error", err.Error()), "input:", *in)
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 
@@ -84,7 +89,7 @@ func (s *AuthService) Register(ctx context.Context, in *RegisterInput) (*Registe
 	}
 	u, err := s.um.Create(ctx, &CreateUser)
 	if err != nil {
-		s.log.Error("user creation", slog.String("error", err.Error()), "input:", *in)
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 

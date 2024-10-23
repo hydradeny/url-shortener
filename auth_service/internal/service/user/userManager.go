@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"fmt"
 	"log/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
@@ -30,10 +31,12 @@ func NewService(log *slog.Logger, repo UserStorage) *UserManager {
 }
 
 func (um *UserManager) Create(ctx context.Context, in *CreateUser) (*User, error) {
+	const op = "UserManager.Create"
 	salt := makeSalt(saltLength)
 	in.Password = string(um.hashPass(in.Password, salt))
 	rawUser, err := um.storage.Create(ctx, in)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 	user := &User{
@@ -44,8 +47,10 @@ func (um *UserManager) Create(ctx context.Context, in *CreateUser) (*User, error
 }
 
 func (um *UserManager) GetByEmail(ctx context.Context, email string) (*User, error) {
+	const op = "UserManager.GetByEmail"
 	rawUser, err := um.storage.GetByEmail(ctx, email)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 	user := &User{
@@ -56,14 +61,16 @@ func (um *UserManager) GetByEmail(ctx context.Context, email string) (*User, err
 }
 
 func (um *UserManager) CheckPasswordByEmail(ctx context.Context, in *CheckPassword) (*User, error) {
+	const op = "UserManager.CheckPasswordByEmail"
 	rawUser, err := um.storage.GetByEmail(ctx, in.Email)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 
 	salt := rawUser.PassHash[0:saltLength]
 	if !bytes.Equal(um.hashPass(in.Password, salt), rawUser.PassHash) {
-		return nil, apperror.NewAppError(apperror.ErrBadPassword, "service CheckPassword error", nil)
+		return nil, apperror.NewAppError(apperror.ErrBadPassword, "", fmt.Errorf("%s: %w", op, err))
 	}
 
 	user := &User{

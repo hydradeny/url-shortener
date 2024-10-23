@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/gofrs/uuid"
@@ -28,9 +29,11 @@ func New(log *slog.Logger, repo SessionRepo) *SessionManager {
 }
 
 func (sm *SessionManager) Create(ctx context.Context, in *CreateSession) (*Session, error) {
+	const op = "SessionManager.Create"
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		return nil, apperror.NewAppError(apperror.ErrInternal, "generation UUID error", err)
+		return nil, apperror.NewAppError(apperror.ErrInternal, "",
+			fmt.Errorf("%s: %w", op, err))
 	}
 	createSession := &CreateSessionStorage{
 		ID:     uuid.String(),
@@ -38,34 +41,41 @@ func (sm *SessionManager) Create(ctx context.Context, in *CreateSession) (*Sessi
 	}
 	err = sm.storage.Create(ctx, createSession)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 	res := &Session{
 		ID:     createSession.ID,
 		UserID: createSession.UserID,
 	}
-	return res, err
+	return res, nil
 }
 
 func (sm *SessionManager) Check(ctx context.Context, in *CheckSession) (*Session, error) {
+	const op = "SessionManager.Check"
 	sess, err := sm.storage.GetByID(ctx, in.SessionID)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return nil, err
 	}
 	return sess, err
 }
 
 func (sm *SessionManager) Destroy(ctx context.Context, in *DestroySession) error {
+	const op = "SessionManager.Destroy"
 	err := sm.storage.Delete(ctx, in.SessionID)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return err
 	}
 	return nil
 }
 
 func (sm *SessionManager) DestroyAll(ctx context.Context, in *DestroyAllSession) (int, error) {
+	const op = "SessionManager.DestroyAll"
 	deleted, err := sm.storage.DeleteByUserID(ctx, in.UserID)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		return 0, err
 	}
 	return deleted, nil

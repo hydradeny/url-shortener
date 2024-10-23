@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/hydradeny/url-shortener/auth_service/internal/apperror"
@@ -34,6 +35,7 @@ func NewPgxUserRepo(ctx context.Context, pgxPool PgxPoolIface, log *slog.Logger)
 }
 
 func (repo *PgxUserRepo) Create(ctx context.Context, in *user.CreateUser) (*user.RawUser, error) {
+	const op = "PgxUserRepo.Create"
 	row := repo.dbpool.QueryRow(ctx, "INSERT INTO users(email, password) values ($1,$2) RETURNING id", in.Email, in.Password)
 	out := &user.RawUser{
 		PassHash: []byte(in.Password),
@@ -43,14 +45,15 @@ func (repo *PgxUserRepo) Create(ctx context.Context, in *user.CreateUser) (*user
 	if err != nil {
 		// TODO: is it already exists error?
 		if err == pgx.ErrNoRows {
-			return nil, apperror.NewAppError(apperror.ErrUserExist, "", nil)
+			return nil, apperror.NewAppError(apperror.ErrUserExist, "", fmt.Errorf("%s: %w", op, err))
 		}
-		return nil, apperror.NewAppError(apperror.ErrInternal, "", err)
+		return nil, apperror.NewAppError(apperror.ErrInternal, "", fmt.Errorf("%s: %w", op, err))
 	}
 	return out, nil
 }
 
 func (repo *PgxUserRepo) GetByEmail(ctx context.Context, email string) (*user.RawUser, error) {
+	const op = "PgxUserRepo.GetByEmail"
 	row := repo.dbpool.QueryRow(ctx, "SELECT id, password FROM users WHERE email=$1", email)
 	out := &user.RawUser{
 		Email: email,
@@ -58,9 +61,9 @@ func (repo *PgxUserRepo) GetByEmail(ctx context.Context, email string) (*user.Ra
 	err := row.Scan(&out.ID, &out.PassHash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apperror.NewAppError(apperror.ErrNotFound, "email", nil)
+			return nil, apperror.NewAppError(apperror.ErrNotFound, "email", fmt.Errorf("%s: %w", op, err))
 		}
-		return nil, apperror.NewAppError(apperror.ErrInternal, "", err)
+		return nil, apperror.NewAppError(apperror.ErrInternal, "", fmt.Errorf("%s: %w", op, err))
 	}
 	return out, nil
 }

@@ -1,0 +1,104 @@
+
+secrets:
+  pg_password:
+    environment: "PG_PASSWORD"
+
+      
+services: 
+  postgres:
+    secrets: 
+      - source: pg_password
+        target: pg_password
+    image: postgres:14-alpine
+    networks:
+      new:
+        aliases:
+          - database
+    environment: 
+      POSTGRES_USER: $PG_USER
+      POSTGRES_DB: $PG_DBNAME
+      POSTGRES_PASSWORD_FILE: "/run/secrets/pg_password"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - storage:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    # ports:
+    #   - "$PG_PORT:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $PG_USER -d $PG_DBNAME"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  adminer:
+    image: adminer
+    networks: 
+      - new
+    restart: always
+    ports:
+      - 8090:8080
+    links:
+      - postgres
+
+  migrator:
+    secrets:
+      - pg_password
+    image: migrate/migrate
+    links:
+      - postgres
+    networks:
+      - new
+    volumes:
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database", "postgres://$PG_USER:$PG_PASSWORD@postgres:$PG_PORT/$PG_DBNAME?sslmode=disable", "up"]
+
+    # entrypoint: ["sh", "/migrate"]
+    # command: ["-verbose","-path", "./migrations", "-database", "user=postgres password=postgres host=postgres port=5432 dbname=postgres scheme=public sslmode=disable", "up"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+        # restart: true
+# $$(<$${!PG_PASSWORD_FILE})
+  auth:
+    secrets: 
+      - source: pg_password
+        target: pg_password
+    networks: 
+      - new
+    environment:
+      PG_PORT: $PG_PORT
+      PG_DBNAME: $PG_DBNAME
+      PG_CONN_STRING: $PG_CONN_STRING
+      PG_PASSWORD_FILE: "/run/secrets/pg_password"
+      CONFIG_PATH: $SSO_CONFIG_PATH
+
+    build:
+      context: .
+      ssh:
+        - default
+    # depends_on:
+    #   migrator:
+    #     condition: service_completed_successfully
+    ports:
+      - "44044:44044"
+
+
+volumes: 
+  storage:
+  migrations:
+    # external:
+    #   true
+
+networks:
+  new:
+
+# env_file:
+#   - path: ./secrets.env
+#     required: true

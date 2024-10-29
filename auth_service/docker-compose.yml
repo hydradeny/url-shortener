@@ -22,8 +22,6 @@ services:
     volumes:
       - storage:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
-    # ports:
-    #   - "$PG_PORT:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $PG_USER -d $PG_DBNAME"]
       interval: 10s
@@ -57,15 +55,12 @@ services:
       - new
     volumes:
       - ./migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://$PG_USER:$PG_PASSWORD@postgres:$PG_PORT/$PG_DBNAME?sslmode=disable", "up"]
+    entrypoint: ["/migrate", "-path", "/migrations", "-database", "postgres://$PG_USER:$PG_PASSWORD@postgres:$PG_PORT/$PG_DBNAME?sslmode=disable"]
+    command: ["up"]
 
-    # entrypoint: ["sh", "/migrate"]
-    # command: ["-verbose","-path", "./migrations", "-database", "user=postgres password=postgres host=postgres port=5432 dbname=postgres scheme=public sslmode=disable", "up"]
     depends_on:
       postgres:
         condition: service_healthy
-        # restart: true
-# $$(<$${!PG_PASSWORD_FILE})
   auth:
     secrets: 
       - source: pg_password
@@ -83,9 +78,6 @@ services:
       context: .
       ssh:
         - default
-    # depends_on:
-    #   migrator:
-    #     condition: service_completed_successfully
     ports:
       - "44044:44044"
 
@@ -93,12 +85,7 @@ services:
 volumes: 
   storage:
   migrations:
-    # external:
-    #   true
 
 networks:
   new:
 
-# env_file:
-#   - path: ./secrets.env
-#     required: true

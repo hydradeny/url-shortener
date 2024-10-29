@@ -21,9 +21,9 @@ var (
 )
 
 type AppError struct {
-	WrappedErr error `json:"-"`
-	UserError  error
-	Message    string `json:",omitempty"`
+	WrappedErr error  `json:"-"`
+	UserError  error  `json:"error"`
+	Message    string `json:"message,omitempty"`
 }
 
 func (e *AppError) Unwrap() error {
@@ -38,12 +38,13 @@ func (e *AppError) Is(err error) bool {
 	return errors.Is(err, e.UserError)
 }
 
-func (e *AppError) Marshal() []byte {
+func (e *AppError) MarshalJSON() ([]byte, error) {
+	// bytes, err := json.Marshal(map[string]string{"error": e.UserError.Error(), "message": e.Message})
 	bytes, err := json.Marshal(e)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return bytes
+	return bytes, nil
 }
 
 func NewAppError(errorType error, messqge string, err error) *AppError {

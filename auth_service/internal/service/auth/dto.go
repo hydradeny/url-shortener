@@ -11,7 +11,12 @@ type LoginInput struct {
 }
 
 func (d *LoginInput) Validate() error {
-	// TODO: add validation
+	if len(d.Email) == 0 {
+		return ErrWrongEmailLength
+	}
+	if len(d.Password) == 0 {
+		return ErrWrongPassLength
+	}
 	return nil
 }
 

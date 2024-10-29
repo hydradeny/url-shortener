@@ -63,13 +63,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 				fallthrough
 			case apperror.ErrBadPassword:
 				h.log.Warn("HTTP login", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusUnauthorized, apperror.ErrBadLogin)
+				restapi.RespJSONError(w, http.StatusUnauthorized, appError)
 			case apperror.ErrInternal:
 				h.log.Error("HTTP login", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrInternal)
+				restapi.RespJSONError(w, http.StatusInternalServerError, appError)
 			default:
 				h.log.Error("HTTP login", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrUnknown)
+				restapi.RespJSONError(w, http.StatusInternalServerError, appError)
 			}
 			return
 		}
@@ -114,19 +114,19 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			switch appError.UserError {
 			case apperror.ErrUserExist:
 				h.log.Warn("HTTP register", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusConflict, apperror.ErrUserExist)
+				restapi.RespJSONError(w, http.StatusConflict, appError)
 			case apperror.ErrPasswordNotValid:
 				h.log.Warn("HTTP register", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusBadRequest, apperror.ErrPasswordNotValid)
+				restapi.RespJSONError(w, http.StatusBadRequest, appError)
 			case apperror.ErrEmailNotValid:
 				h.log.Warn("HTTP register", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusBadRequest, apperror.ErrEmailNotValid)
+				restapi.RespJSONError(w, http.StatusBadRequest, appError)
 			case apperror.ErrInternal:
 				h.log.Error("HTTP register", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrInternal)
+				restapi.RespJSONError(w, http.StatusInternalServerError, appError)
 			default:
 				h.log.Error("HTTP register", slog.String("error", err.Error()))
-				restapi.RespJSONError(w, http.StatusInternalServerError, apperror.ErrUnknown)
+				restapi.RespJSONError(w, http.StatusInternalServerError, appError)
 			}
 			return
 		}
@@ -140,8 +140,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	// TODO: check session
-
 	session, err := sessionFromContext(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)

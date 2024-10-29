@@ -36,15 +36,18 @@ func NewPgxUserRepo(ctx context.Context, pgxPool PgxPoolIface, log *slog.Logger)
 
 func (repo *PgxUserRepo) Create(ctx context.Context, in *user.CreateUser) (*user.RawUser, error) {
 	const op = "PgxUserRepo.Create"
-	row := repo.dbpool.QueryRow(ctx, "INSERT INTO users(email, password) values ($1,$2) RETURNING id", in.Email, in.Password)
+	row := repo.dbpool.QueryRow(ctx, "INSERT INTO users(email, password) VALUES($1,$2) returning id", in.Email, []byte(in.Password))
 	out := &user.RawUser{
 		PassHash: []byte(in.Password),
 		Email:    in.Email,
 	}
 	err := row.Scan(&out.ID)
 	if err != nil {
-		// TODO: is it already exists error?
-		if err == pgx.ErrNoRows {
+		var pgerr *pgconn.PgError
+		// if errors.As(err, &pgerr) {
+		// 	repo.log.Warn("PGERROR: ", slog.String("PGERROR: ", fmt.Sprintf("%+v", *pgerr)))
+		// }
+		if errors.As(err, &pgerr) && pgerr.ConstraintName == "users_email_key" {
 			return nil, apperror.NewAppError(apperror.ErrUserExist, "", fmt.Errorf("%s: %w", op, err))
 		}
 		return nil, apperror.NewAppError(apperror.ErrInternal, "", fmt.Errorf("%s: %w", op, err))
